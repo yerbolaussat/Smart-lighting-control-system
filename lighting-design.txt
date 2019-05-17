@@ -1,0 +1,51 @@
+--------------------------------------------------------------------------------
+				Processes on Raspberry Pi:
+--------------------------------------------------------------------------------
+Memory between processes is shared through files (note: i/o calls are slow):
+- A: illuminance gain matrix
+- E: environmental gain vector
+- current_lighting_levels: vector of lighting levels on sensing modules
+- current_occupancy: vector of occupancy values on sensing modules
+
+rpi_calibrate: initial calibration of the system
+	- Connects to sensing modules and Phue bridge
+	- Completes calibration routine
+	- Disconnects from sensing modules and Phue bridge
+	- Runs once in the beginning before other processes start
+	
+	-> Talks to Philips Hue bridge to set dimming_levels on bulbs
+	-> Talks to Omega sensing modules (python client socket) to read light levels on sensors
+	-> Updates illuminance gain matrix A and environmental gain vector E
+
+rpi_sense: gets sensor readings from sensing modules
+	- Stores light sensors' calibration constants
+
+	-> Talks to Omega sensing modules (python client socket)
+	-> Updates current_occupancy and current_lighting_levels vectors
+
+rpi_optimize: solves optimization problem and updates dim_levels values
+	-> Accesses illuminance gain matrix A, and environment gain vector E
+	-> Updates dimming_levels vector
+
+rpi_actuate: sets dimming levels on bulbs
+	-> Talks to Philips Hue bridge
+	-> Accesses dimming_levels vector
+
+--------------------------------------------------------------------------------
+				Processes on Onion Omega:
+--------------------------------------------------------------------------------
+Memory between processes is shared through files:
+- motion_history: vector of motion history 
+
+omega_motion_tracker: continuously reads PIR sensor values
+	-> Reads occupancy value from PIR sensor
+	-> If motion_history file exists, updates it by writing occupancy reading to it
+	-> Keep motion_history vector under certain length
+	-> If motion_history file does not exist, creates file and writes occupancy to it
+
+omega_responder: sends sensor readings to RPi
+	-> Initializes py-server
+	-> Connects to control module and waits for requests from it
+	-> When request is received, reads light level from light sensor
+	-> Reads the motion_history file, and computes occupancy status
+	-> Responds to the client
