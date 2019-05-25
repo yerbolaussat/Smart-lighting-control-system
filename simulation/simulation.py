@@ -1,9 +1,9 @@
 """
-File name: rpi_optimize.py
+File name: simulation.py
 Author: Yerbol Aussat
 Python Version: 2.7
 
-Process that calculates optimal dimming levels of Phue bulbs, given occupancy and lighting values
+Simulation
 """
 
 from datetime import datetime as dt

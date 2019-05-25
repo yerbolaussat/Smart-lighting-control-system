@@ -3,6 +3,7 @@ import time
 import traceback
 from enum import Enum
 
+
 class TSL2561:
 	class Light(Enum):
 		Full_Spectrum = 0

@@ -1,4 +1,11 @@
-# Import libraries
+"""
+File name: local_test_motion_and_light_sensing.py
+Author: Yerbol Aussat
+Python Version: 2.7
+
+Script for local testing of motion and light sensors.
+"""
+
 from tsl2561 import TSL2561
 import onionGpio
 import time
@@ -6,7 +13,7 @@ import time
 # Initialize Readers
 tsl = TSL2561()
 pir = onionGpio.OnionGpio(1)
-pir_status  = pir.setInputDirection()
+pir_status = pir.setInputDirection()
 print "Readers are initialized"
 while True:
 	visible_light_read = tsl.read_value(TSL2561.Light.Visible)
