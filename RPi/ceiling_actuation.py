@@ -28,7 +28,7 @@ class CeilingActuation:
 		bridge = Bridge(phue_bridge_ip_address)
 		bridge.connect()
 		self.lights = bridge.lights
-		print "Successfully connected to Philips Hue Bridge"
+		print "[*] Successfully connected to Philips Hue Bridge"
 		self.lock = Lock()
 
 	# Convert dimming level to control value

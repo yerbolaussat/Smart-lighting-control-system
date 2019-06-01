@@ -16,9 +16,9 @@ class OfficeSensing:
 			self.light_calibration_const = light_calibration_const
 			for ip, port in addresses:
 				module = SensingModule(ip, port)
-				print "   [*]", module.send_msg("Check connection")
+				print "[*]", module.send_msg("Check connection")
 				self.sens_modules.append(module)
-			print "   [*] Successfully connected to sensing modules"
+			print "[*] Successfully connected to sensing modules"
 		except:
 			print "* Initialization error!"
 			self.stop_sens_modules()
@@ -28,7 +28,18 @@ class OfficeSensing:
 		print "\nConnection with sensing modules is interrupted"
 		for module in self.sens_modules:
 			module.disconnect()
-			
+
+	# Add sensing module to the system
+	def add_portable_module(self, module, calibr_const):
+		self.sens_modules.append(module)
+		self.light_calibration_const.append(calibr_const)
+
+	# Add sensing module to the system
+	def remove_portable_module(self, i):
+		self.disconnect()
+		del self.sens_modules[i]
+		del self.light_calibration_const[i]
+
 	# Get light and occupancy readings from sensing modules
 	def get_sensor_readings(self):
 		light_readings = []

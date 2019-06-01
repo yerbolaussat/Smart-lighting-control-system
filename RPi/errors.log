@@ -1,0 +1,26 @@
+2019-05-31 13:45:54.897489  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 13:46:15.476320  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 13:56:45.356110  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 13:57:00.166136  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 17:50:28.640540  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 17:50:57.151465  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 17:50:59.722132  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 17:51:59.549846  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 17:52:00.404941  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 18:22:45.729435  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 18:23:25.971534  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 18:23:28.708803  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 18:31:57.121885  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 18:31:58.467122  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 18:31:58.588561  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 18:40:09.835073  :  Failed to interpret file 'env_gain.npy' as a pickle
+2019-05-31 18:40:10.580661  :  Failed to interpret file 'env_gain.npy' as a pickle
+2019-05-31 21:00:23.476422  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 21:00:52.504193  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 21:04:38.778716  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 21:04:50.756885  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 21:08:35.888892  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 21:09:19.591552  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 21:10:16.073453  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 21:12:27.450685  :  index 4 is out of bounds for axis 0 with size 4
+2019-05-31 21:15:56.204940  :  Failed to interpret file 'env_gain.npy' as a pickle

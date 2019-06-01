@@ -36,7 +36,7 @@ def get_target_illum():
 	with open(OCCUPANCY_FILE_NAME, 'r') as f_occup:
 		occupancy_vals_str = f_occup.read()
 	occupancy_vals = [int(val) for val in occupancy_vals_str.split()]
-	return np.array([200 if occupancy_vals[i] == 1 else 0 for i in range(len(occupancy_vals))])
+	return np.array([100 if occupancy_vals[i] == 1 else occupancy_vals[i] for i in range(len(occupancy_vals))])
 
 
 # Set optimal dimming value that satisfies target illuminance.
@@ -58,7 +58,8 @@ def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 	# Coefficients of variable that is being optimized
 	a_pow = BEST_FIT_COEF_1
 	b_pow = BEST_FIT_COEF_2
-	c = [a_pow] * 8
+	n_bulbs = min(8, len(actuators.lights))
+	c = [a_pow] * n_bulbs
 	
 	# Target for each sensor
 	# Offsetting target by environmental contribution (Again, to get the form required by scipy.optimize.linprog)
@@ -66,7 +67,7 @@ def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 	target_no_env = np.negative(target_no_env)
 
 	# Solve optimization program
-	bounds = [(0.0, 1.0) for _ in range(8)]
+	bounds = [(0.0, 1.0) for _ in range(n_bulbs)]
 	res = linprog(c, A_ub=A, b_ub=target_no_env, bounds=bounds, method = 'simplex', options={"disp": False})
 	print "{:<35} {:<25}".format("Optimization finished.", dt.now().strftime("%H:%M:%S.%f"))
 
@@ -80,10 +81,10 @@ def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 				bulbs_on += 1
 		power = res.fun + bulbs_on * b_pow
 	else:
-		d_opt = np.ones((8, 1))
+		d_opt = np.ones((n_bulbs, 1))
 		d_opt = d_opt.tolist()
 		actuators.set_dimming(d_opt, wait_time)
-		power = 8 * (a_pow+b_pow)
+		power = n_bulbs * (a_pow+b_pow)
 # 	print "Optimal power consumption:", "%.3f"%power, "W"
 
 
@@ -91,7 +92,7 @@ def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 def optimizer(actuators):
 	target_illum = get_target_illum()
 	A = np.load(ILLUM_GAIN_MTX_FILE_NAME)
-	R = np.zeros(4)
+	R = np.zeros(A.shape[0])
 	while True:
 		try:
 			set_optimal_dimming(actuators, target_illum, 1.5)
@@ -140,6 +141,10 @@ if __name__ == '__main__':
 			optimizer_process = Process(target=optimizer, args=(ceiling_actuation, ))
 			optimizer_process.daemon = True
 			optimizer_process.start()
+		if msg == 'Pause':
+			print "[*] Pause optimizer"
+			if optimizer_process:
+				optimizer_process.terminate()
 		elif msg == 'Close':
 			if optimizer_process:
 				optimizer_process.terminate()

@@ -3,145 +3,220 @@ File name: simulation.py
 Author: Yerbol Aussat
 Python Version: 2.7
 
-Simulation
+Simulation to determine nergy consumption
 """
 
 from datetime import datetime as dt
+import inspect
 import os
+import time
 import numpy as np
-import traceback
 from scipy.optimize import linprog
-from ceiling_actuation import CeilingActuation
-from multiprocessing.connection import Listener
-from multiprocessing import Process
-from multiprocessing import Lock
-from rpi_sense import OCCUPANCY_FILE_NAME
-from rpi_sense import ILLUMINANCE_FILE_NAME
+import random
+import argparse
 
-print "{:<35} {:<25}".format("Finished importing libraries.", dt.now().strftime("%H:%M:%S.%f"))
 
-# Constants
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+SIMULATION_DATA_FILE_NAME = currentdir + "/sim_data_3.csv"
+ILLUM_GAIN_MTX_FILE_NAME = parentdir + '/RPi/illum_gain.npy'
+
+# CONSTANTS:
+# LED bulbs Power vs dimming level relationship params:
 # Coefficients of "power vs dimming" best fit line:
-BEST_FIT_COEF_1 = 3.86706205178
-BEST_FIT_COEF_2 = 1.04678541344
+SLOPE = 7.13707690629  # in Watts
+ON_OFF_POWER = 1.58187308841  # in Watts
+PHUE_PHANTOM_POWER = 0.605  # in Watts
 
-ILLUM_GAIN_MTX_FILE_NAME = 'illum_gain.npy'
-ENV_GAIN_FILE_NAME = 'env_gain.npy'
-PHUE_IP_ADDRESS = '192.168.0.3'
-lock = Lock()
+# Power consumed when LED bulbs is on:
+POWER_LED = SLOPE + ON_OFF_POWER
+
+# Power consumed when CFL bulbs is on:
+POWER_CFL = 20.075  # in Watts
+
+# Power consumed when Inacndescent bulbs is on:
+POWER_INC = 54.12  # in Watts
+
+# Old values:
+# SLOPE = 3.86706205178
+# ON_OFF_POWER = 1.04678541344
+# PHUE_PHANTOM_POWER = 0.605
 
 
-# Get target illuminance based on occupancy
-def get_target_illum():	
-	with open(OCCUPANCY_FILE_NAME, 'r') as f_occup:
-		occupancy_vals_str = f_occup.read()
-	occupancy_vals = [int(val) for val in occupancy_vals_str.split()]
-	return np.array([200 if occupancy_vals[i] == 1 else 0 for i in range(len(occupancy_vals))])
-
-
-# Set optimal dimming value that satisfies target illuminance.
-# cur_dim_level file gets updated in actuators.set_dimming method.
-def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
-	# Take negative of values so we can represent constraints as required by scipy.optimize.linprog
-	if not os.path.isfile('./{}'.format(ILLUM_GAIN_MTX_FILE_NAME)) or \
-			not os.path.isfile('./{}'.format(ENV_GAIN_FILE_NAME)):
-		return
-	A = np.load(ILLUM_GAIN_MTX_FILE_NAME)
-	A = np.negative(A)
-	try:
-		E = np.load(ENV_GAIN_FILE_NAME)
-	except IOError, e:
-		log_error(str(e))
-		return
-	print "\n{:<35} {:<25}".format("I/O operations finished.", dt.now().strftime("%H:%M:%S.%f"))
-	# Power consumed by bulb i: Power_i = a_pow * dim_i + b_pow
-	# Coefficients of variable that is being optimized
-	a_pow = BEST_FIT_COEF_1
-	b_pow = BEST_FIT_COEF_2
+# Get power required to reach target illuminance with environmental illuminance contribution E
+def get_optimal_power(target_illum, E):
+	a_pow = SLOPE
 	c = [a_pow] * 8
-	
+
 	# Target for each sensor
-	# Offsetting target by environmental contribution (Again, to get the form required by scipy.optimize.linprog)
 	target_no_env = [target_illum[i] - E[i] for i in range(len(E))]
 	target_no_env = np.negative(target_no_env)
 
 	# Solve optimization program
 	bounds = [(0.0, 1.0) for _ in range(8)]
-	res = linprog(c, A_ub=A, b_ub=target_no_env, bounds=bounds, method = 'simplex', options={"disp": False})
-	print "{:<35} {:<25}".format("Optimization finished.", dt.now().strftime("%H:%M:%S.%f"))
+	res = linprog(c, A_ub=A, b_ub=target_no_env, bounds=bounds, method='simplex', options={"disp": False})
 
-	if res.success: 
+	power = 0
+	if res.success:
 		d_opt = res.x
 		d_opt = d_opt.tolist()
-		actuators.set_dimming(d_opt, wait_time)
-		bulbs_on = 0
+		num_bulbs_on = 0
 		for dim_val in d_opt:
 			if dim_val > 0.0001:
-				bulbs_on += 1
-		power = res.fun + bulbs_on * b_pow
+				num_bulbs_on += 1
+		power = res.fun + num_bulbs_on * ON_OFF_POWER + (8-num_bulbs_on) * PHUE_PHANTOM_POWER
 	else:
-		d_opt = np.ones((8, 1))
-		d_opt = d_opt.tolist()
-		actuators.set_dimming(d_opt, wait_time)
-		power = 8 * (a_pow+b_pow)
-# 	print "Optimal power consumption:", "%.3f"%power, "W"
+		print "OPTIMIZATION IS UNSUCCESSFUL"
+	return power
 
 
-# Optimizer thread that sets optimal dimming levels based on current illuminance values.
-def optimizer(actuators):
-	target_illum = get_target_illum()
-	A = np.load(ILLUM_GAIN_MTX_FILE_NAME)
-	R = np.zeros(4)
-	while True:
-		try:
-			set_optimal_dimming(actuators, target_illum, 1.5)
-			if not os.path.isfile('./{}'.format(ILLUMINANCE_FILE_NAME)):
-				print "Illuminance file is not found"
-				break
-			with open(ILLUMINANCE_FILE_NAME, 'r') as f_illum:
-				cur_illum_str = f_illum.read()
-			if len(cur_illum_str) != 0:
-				R = np.array([float(val) for val in cur_illum_str.split()])
-			d = actuators.get_dim_levels()
-			E = R - A.dot(d)
-			with lock:
-				np.save(ENV_GAIN_FILE_NAME, E)
-		except Exception, e:  # Stop optimizer if there is an error
-			print "\nOPTIMIZER FAILURE\n"
-			error_msg = str(e)
-			print "Error Message: {}\n".format(error_msg)
-			log_error(error_msg)
-			traceback.print_exc()
-			break
+def time_simulated(minutes):
+	days = minutes / 1440
+	minutes %= 1440
+	hours = minutes / 60
+	minutes %= 60
+	return "{}{}{}".format("" if days == 0 else "{} days ".format(days),
+	                       "" if hours == 0 else "{} hours ".format(hours),
+	                       "{} minutes ".format(minutes))
 
 
-# Log an error
-def log_error(error_msg):
-	with open("errors.log", "a") as log_fle:
-		log_fle.write("{}  :  {}\n".format(dt.now(), error_msg))
+def get_start_and_end_times():
+	start_and_end_times = {}
+	with open(SIMULATION_DATA_FILE_NAME) as fp:
+		fp.readline()
+		line = fp.readline()
+		occup_history = []
+
+		while line:
+			min_from_midnight, day_of_exp, _, _, _, occup1, _, occup2, _, occup3, \
+			_, occup4 = line.split(",")
+
+			occup_vals = map(int, [occup1, occup2, occup3, occup4])
+
+			if len(occup_history) >= 20:
+				occup_history.pop()
+			occup_history.insert(0, max(occup_vals))
+
+			if any(occup_vals):
+				day_of_exp = int(day_of_exp)
+				min_from_midnight = int(min_from_midnight)
+
+				if min_from_midnight > 5*60:
+					if day_of_exp not in start_and_end_times:
+						start_and_end_times[day_of_exp] = [min_from_midnight, -1]
+					else:
+						if sum(occup_history) >= 6:
+							start_and_end_times[day_of_exp][1] = min_from_midnight
+
+			line = fp.readline()
+	return start_and_end_times
+
+
+def simulate(illum1, occup1, illum2, occup2, illum3, occup3, illum4, occup4,
+             occupancy_detection, daylight_harvesting, bulb_type):
+
+	global total_energy
+	global mins_occupied
+	global mins_unoccupied
+	global day_of_exp
+	global min_from_midnight
+
+	# Systems with daylight harvesting:
+	if daylight_harvesting:
+		occup_vals = map(int, [occup1, occup2, occup3, occup4])
+
+		# If no occupancy detection, system should be running from start time to end time for that day
+		if not occupancy_detection:
+			start_t, end_t = start_and_end_times[day_of_exp] if day_of_exp in start_and_end_times else (-1, -1)
+			occup_vals = [1]*4 if start_t <= min_from_midnight <= end_t else [0]*4
+
+		target_illum = np.array([200 if occup_vals[i] == 1 else 0 for i in range(len(occup_vals))])
+		illum_vals = [float(illum1), float(illum2) * (1 + random.uniform(0, 0.05)),
+		              float(illum3), float(illum4) * (1 + random.uniform(0, 0.05))]
+		env_gain_vals = np.array(illum_vals)
+
+		if any(occup_vals):
+			mins_occupied += 1
+		else:
+			mins_unoccupied += 1
+		power = get_optimal_power(target_illum, env_gain_vals)
+		total_energy += power / 1000 / 60
+
+	# Systems without daylight harvesting
+	else:
+		occup_vals = map(int, [occup1, occup2, occup3, occup4])
+		# If no occupancy detection, system should be running from start time to end time for that day
+		if not occupancy_detection:
+			start_t, end_t = start_and_end_times[day_of_exp] if day_of_exp in start_and_end_times else (-1, -1)
+			occup_vals = [1]*4 if start_t <= min_from_midnight <= end_t else [0]*4
+
+		if bulb_type.lower() == "led":
+			if any(occup_vals):
+				total_energy += 8 * POWER_LED / 1000 / 60
+				mins_occupied += 1
+			else:
+				total_energy += 8 * PHUE_PHANTOM_POWER / 1000 / 60
+				mins_unoccupied += 1
+		elif bulb_type.lower() == "cfl":
+			if any(occup_vals):
+				total_energy += 8 * POWER_CFL / 1000 / 60
+				mins_occupied += 1
+			else:
+				mins_unoccupied += 1
+		elif bulb_type.lower() == "inc":
+			if any(occup_vals):
+				total_energy += 6 * POWER_INC / 1000 / 60
+				mins_occupied += 1
+			else:
+				mins_unoccupied += 1
 
 
 if __name__ == '__main__':
-	print "{:<35} {:<25}".format("Main script started.", dt.now().strftime("%H:%M:%S.%f"))
-	ceiling_actuation = CeilingActuation(PHUE_IP_ADDRESS)
+	parser = argparse.ArgumentParser(description='Simulation parameters.')
+	parser.add_argument('-d', '--daylight-harvesting', action='store_true')
+	parser.add_argument('-o', '--occupancy-detection', action='store_true')
+	parser.add_argument('-b', '--bulb-type', default='led', type=str)
+	parser.add_argument('-n', default=90, type=int) # number of days
+	args = parser.parse_args()
 
-	# Initialize Listener, to listen to commands from sensing process
-	sensing_address = ('localhost', 6000)
-	listener = Listener(sensing_address, authkey='secret password')
-	conn = listener.accept()
-	print "[*] Optimizer accepted connection from sensing process"
+	print "{:<35} {:<25}".format("Simulation script started.", dt.now().strftime("%H:%M:%S.%f"))
 
-	optimizer_process = None
-	while True:
-		msg = conn.recv()
-		if msg == 'Optimize':
-			if optimizer_process:
-				optimizer_process.terminate()
-			optimizer_process = Process(target=optimizer, args=(ceiling_actuation, ))
-			optimizer_process.daemon = True
-			optimizer_process.start()
-		elif msg == 'Close':
-			if optimizer_process:
-				optimizer_process.terminate()
-			conn.close()
-			break
+	# global variables:
+	A = np.load(ILLUM_GAIN_MTX_FILE_NAME)
+	A = np.negative(A)  # To get the right format for optimization
+	total_energy = 0
+	mins_occupied, mins_unoccupied = 0, 0
+	start_and_end_times = get_start_and_end_times()
+
+	t_start = time.time()
+	if args.bulb_type != 'led' and args.daylight_harvesting:
+		print "Daylight harvesting is only supported by LED bulbs"
+		exit()
+
+	with open(SIMULATION_DATA_FILE_NAME) as fp:
+		line = fp.readline()
+		line = fp.readline()
+		count = 0
+		while line:
+			if count == 1440*args.n:
+				break
+			min_from_midnight, day_of_exp, _, _, illum1, occup1, illum2, occup2, illum3, occup3, \
+			illum4, occup4 = line.split(",")
+			day_of_exp = int(day_of_exp)
+			min_from_midnight = int(min_from_midnight)
+			simulate(illum1, occup1, illum2, occup2, illum3, occup3, illum4, occup4,
+			         args.occupancy_detection, args.daylight_harvesting, args.bulb_type)
+			line = fp.readline()
+			if count % 1000 == 0:
+				print "\n{} simulated".format(time_simulated(count))
+				print "\tEnergy consumption: {} kW h".format(total_energy)
+				print "\tTime elapsed: {} sec".format(time.time() - t_start)
+			count += 1
+
+		print "\n\n", "*" * 40
+		print "Final Result:"
+		print "{} simulated".format(time_simulated(count))
+		print "\tEnergy consumption: {} kW h".format(total_energy)
+		print "\tTime elapsed: {} sec".format(time.time() - t_start)
+		if mins_unoccupied + mins_occupied > 0:
+			print "\tFraction Occupied: {}".format(float(mins_occupied) / (mins_unoccupied + mins_occupied))
