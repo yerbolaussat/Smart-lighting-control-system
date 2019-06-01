@@ -50,7 +50,7 @@ def sense_and_optimize(office_sensing):
 					module, calibr_const = portable_sensing_modules.pop()
 					office_sensing.add_portable_module(module, calibr_const)
 				print "[*] New sensing module detected. Starting recalibration."
-				calibrator.calibrate(office_sensing_modules)
+				calibrator.calibrate(office_sensing_modules, step=0.1, B=0.65, wait_time=1)
 
 			# Get sensor readings
 			illuminance, occupancy = office_sensing.get_sensor_readings()
@@ -62,7 +62,6 @@ def sense_and_optimize(office_sensing):
 			if t2-t1 > 3:
 				print "\n\n", "*" * 50
 				print dt.now().strftime("%H:%M:%S.%f")
-
 				print_illuminance(illuminance, occupancy)
 				print_occupancy(occupancy)
 				t1 = t2
@@ -116,7 +115,6 @@ def sense_and_optimize(office_sensing):
 							print dt.now().strftime("%H:%M:%S.%f"), "\n"
 							print_occupancy(occupancy)
 							print "#" * 50, "\n", "#" * 50, "\n"
-
 					conn.send(OPTIMIZE_COMMAND)  # Restart the optimizer
 				else:
 					time.sleep(0.1)
