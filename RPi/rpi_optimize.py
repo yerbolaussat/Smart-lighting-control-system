@@ -36,7 +36,7 @@ def get_target_illum():
 	with open(OCCUPANCY_FILE_NAME, 'r') as f_occup:
 		occupancy_vals_str = f_occup.read()
 	occupancy_vals = [int(val) for val in occupancy_vals_str.split()]
-	return np.array([100 if occupancy_vals[i] == 1 else occupancy_vals[i] for i in range(len(occupancy_vals))])
+	return np.array([150 if occupancy_vals[i] == 1 else occupancy_vals[i] for i in range(len(occupancy_vals))])
 
 
 # Set optimal dimming value that satisfies target illuminance.

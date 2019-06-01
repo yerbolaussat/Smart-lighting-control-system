@@ -15,6 +15,8 @@ import argparse
 # Constants
 SENS_MODULE_CONFIG_FILE_NAME = 'sensing_module_list.txt'
 PHUE_IP_ADDRESS = '192.168.0.3'
+ILLUM_GAIN_MTX_FILE_NAME = 'illum_gain.npy'
+ENV_GAIN_FILE_NAME = 'env_gain.npy'
 
 
 def calibrate(sensors, actuators=None, step=0.35, B=0.65, wait_time=2, initial_calibration=False):
@@ -55,9 +57,12 @@ def calibrate(sensors, actuators=None, step=0.35, B=0.65, wait_time=2, initial_c
 	d = np.array(dim_levels)
 	R = np.array(R)
 	E = R - A.dot(d)
-	np.save('illum_gain.npy', A)
-	np.save('env_gain.npy', E)
-
+	if not initial_calibration:
+		A_prev = np.load(ILLUM_GAIN_MTX_FILE_NAME)
+		if A.shape[0] > A_prev.shape[0]:
+			A[:A_prev.shape[0], :] = A_prev
+	np.save(ILLUM_GAIN_MTX_FILE_NAME, A)
+	np.save(ENV_GAIN_FILE_NAME, E)
 	print '-'*38
 	print "Illuminance Contributon Matrix:"
 	print DataFrame(A)
