@@ -35,8 +35,8 @@ class OfficeSensing:
 		self.light_calibration_const.append(calibr_const)
 
 	# Add sensing module to the system
-	def remove_portable_module(self, i):
-		self.disconnect()
+	def detach_portable_module(self, i):
+		self.sens_modules[i].disconnect()
 		del self.sens_modules[i]
 		del self.light_calibration_const[i]
 

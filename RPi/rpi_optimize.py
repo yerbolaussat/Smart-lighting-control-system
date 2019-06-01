@@ -136,6 +136,7 @@ if __name__ == '__main__':
 	while True:
 		msg = conn.recv()
 		if msg == 'Optimize':
+			print "[*] Restart optimizer"
 			if optimizer_process:
 				optimizer_process.terminate()
 			optimizer_process = Process(target=optimizer, args=(ceiling_actuation, ))

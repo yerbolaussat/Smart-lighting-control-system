@@ -91,7 +91,8 @@ def sense_and_optimize(office_sensing):
 						i += 1
 
 					if i < len(cur_occup):
-						print "\n\n[*] Disconnecting portable module {}...".format(i)
+						print "\n\n", "*" * 50
+						print "[*] Disconnecting portable module {} ...".format(i)
 						conn.send(PAUSE_OPTIMIZATION_COMMAND)
 						office_sensing.detach_portable_module(i)
 						A = np.load(ILLUM_GAIN_MTX_FILE_NAME)
@@ -159,7 +160,7 @@ def print_illuminance(illuminance, occupancy):
 			print "     -------"
 			print "     | {:<3} | -> Target {}".format(int(round(illuminance[i])), occupancy[i])
 			print "     -------"
-		print "\n"
+
 
 # Print occupancy values on each sensor
 def print_occupancy(occupancy):
@@ -200,7 +201,8 @@ def listen_for_connection(portable_modules):
 	server.listen(5)
 	while True:
 		client, addr = server.accept()
-		print "\n\n[*] Got connection request from", addr[0], ":", addr[1]
+		print "\n\n", "*" * 50
+		print "[*] Got connection request from", addr[0], ":", addr[1]
 		module = PortableSensingModule(client)
 		calibr_const = float(client.recv(1024))
 		portable_modules.append((module, calibr_const))
@@ -209,7 +211,7 @@ def listen_for_connection(portable_modules):
 if __name__ == '__main__':
 	addresses, light_calibration_const = get_sens_module_config()
 	office_sensing_modules = OfficeSensing(addresses, light_calibration_const)
-	# calibrator.calibrate(office_sensing_modules, initial_calibration=True)
+	calibrator.calibrate(office_sensing_modules, initial_calibration=True)
 	portable_sensing_modules = []
 
 	thread = Thread(target=listen_for_connection, args=(portable_sensing_modules, ))
