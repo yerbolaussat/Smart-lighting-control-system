@@ -3,7 +3,20 @@ File name: omega_portable_module.py
 Author: Yerbol Aussat
 Python Version: 2.7
 
-Logic for portable sensing modules.
+Portable sensing modules can connect to the smart lighting system when the main controller is running. They only have
+light sensors (it is assumed that when they are connected to the system, the area is occupied).
+
+This process sends (light sensor reading, user lux preference) to the control module (RPi), whenever RPi requests it.
+
+A user can input user lux preference on the portable sensing module's light sensor.
+
+Note:
+ - IP address (and port number) of the control module should be specified in the CONTROL_MODULE_ADDRESS.
+ - Each light sensor has its own calibration constant, which should be specified in CALIBRATION_CONST.
+
+TODO: Send (light reading , occupancy reading, user lux preference) to the control module. This way target illuminance
+on the sensor could be inferred at the control module based on the provided user lux preference and occupancy.
+For portable sensing modules, occupancy reading would always be 1.
 """
 
 import socket
@@ -12,16 +25,15 @@ from threading import Thread
 from threading import Lock
 
 # Constants
-MOTION_HISTORY_SIZE = 500
-MOTION_HISTORY_UPDATE_FREQUENCY = 0.15
 CALIBRATION_CONST = 0.449729180772
-CONTROL_MODULE_ADDRESS = ('192.168.50.151', 1234)
-DEFAULT_TARGET_ILLUMINANCE = 200
+# CONTROL_MODULE_ADDRESS = ('192.168.50.151', 1234)  # Macbook
+CONTROL_MODULE_ADDRESS = ('192.168.0.2', 1234)  # RPi
+DEFAULT_USER_LUX_PREFERENCE = 200
 
 
-# Start server to communicate with the control module (RPi).
+# Start a socket server to communicate with the control module (RPi).
 def start_responder():
-	global target_illuminance
+	global user_lux_preference
 	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	client.connect(CONTROL_MODULE_ADDRESS)
 
@@ -29,7 +41,7 @@ def start_responder():
 	client.send(str(CALIBRATION_CONST))
 	while True:
 		data = client.recv(1024)
-		if data == "disconnect":
+		if data in ["disconnect", ""]:
 			client.send("Goodbye")
 			print "\n[*] Portable module disconnected"
 			client.close()
@@ -37,20 +49,24 @@ def start_responder():
 		elif data == "Read":
 			visible_light_reading = tsl.read_value(TSL2561.Light.Visible)
 			with lock:
-				combined_string = '{} {}'.format(str(visible_light_reading), str(target_illuminance))
+				combined_string = '{} {}'.format(str(visible_light_reading), str(user_lux_preference))
 			client.send(combined_string)
 
 
 if __name__ == '__main__':
 	tsl = TSL2561()
 	lock = Lock()
-	target_illuminance = DEFAULT_TARGET_ILLUMINANCE
+	user_lux_preference = DEFAULT_USER_LUX_PREFERENCE
+
+	ip = raw_input('\nEnter IP address of the lighting system. \n(Press "Enter" to use default address)')
+	if ip:
+		CONTROL_MODULE_ADDRESS = (ip, 1234)
 
 	thread = None
 	while True:
 		if not thread or not thread.is_alive():
 			raw_input('\nPress "Enter" to connect to the smart lighting system.')
-			print "* Recalibrating the system ... "
+			print "* Recalibrating the system to integrate this module... "
 			thread = Thread(target=start_responder)
 			thread.daemon = True
 			thread.start()
@@ -58,8 +74,8 @@ if __name__ == '__main__':
 		user_input = raw_input('Enter desired illuminance (lux) or "-1" to disconnect: ')
 		if user_input.isdigit() or (user_input.startswith('-') and user_input[1:].isdigit()):
 			with lock:
-				target_illuminance = int(user_input)
-		if target_illuminance == -1:
+				user_lux_preference = int(user_input)
+		if user_lux_preference == -1:
 			" * Disconnecting ..."
 			thread.join()
-			target_illuminance = DEFAULT_TARGET_ILLUMINANCE
+			user_lux_preference = DEFAULT_USER_LUX_PREFERENCE

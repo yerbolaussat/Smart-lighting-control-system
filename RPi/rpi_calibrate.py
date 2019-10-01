@@ -14,7 +14,7 @@ import argparse
 
 # Constants
 SENS_MODULE_CONFIG_FILE_NAME = 'sensing_module_list.txt'
-PHUE_IP_ADDRESS = '192.168.0.3'
+PHUE_IP_ADDRESS = '192.168.0.2'
 ILLUM_GAIN_MTX_FILE_NAME = 'illum_gain.npy'
 ENV_GAIN_FILE_NAME = 'env_gain.npy'
 

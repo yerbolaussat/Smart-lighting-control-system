@@ -22,12 +22,12 @@ print "{:<35} {:<25}".format("Finished importing libraries.", dt.now().strftime(
 
 # Constants
 # Coefficients of "power vs dimming" best fit line:
-BEST_FIT_COEF_1 = 3.86706205178
-BEST_FIT_COEF_2 = 1.04678541344
+BEST_FIT_COEF_1 = 11.82
+BEST_FIT_COEF_2 = 1.1814
 
 ILLUM_GAIN_MTX_FILE_NAME = 'illum_gain.npy'
 ENV_GAIN_FILE_NAME = 'env_gain.npy'
-PHUE_IP_ADDRESS = '192.168.0.3'
+PHUE_IP_ADDRESS = '192.168.0.2'
 lock = Lock()
 
 
@@ -36,7 +36,7 @@ def get_target_illum():
 	with open(OCCUPANCY_FILE_NAME, 'r') as f_occup:
 		occupancy_vals_str = f_occup.read()
 	occupancy_vals = [int(val) for val in occupancy_vals_str.split()]
-	return np.array([150 if occupancy_vals[i] == 1 else occupancy_vals[i] for i in range(len(occupancy_vals))])
+	return np.array([450 if occupancy_vals[i] == 1 else occupancy_vals[i] for i in range(len(occupancy_vals))])
 
 
 # Set optimal dimming value that satisfies target illuminance.
@@ -68,7 +68,13 @@ def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 
 	# Solve optimization program
 	bounds = [(0.0, 1.0) for _ in range(n_bulbs)]
-	res = linprog(c, A_ub=A, b_ub=target_no_env, bounds=bounds, method = 'simplex', options={"disp": False})
+
+	res = linprog(c, A_ub=A, b_ub=target_no_env, bounds=bounds, method='interior-point',
+	              options={"disp": False})
+
+	# res = linprog(c, A_ub=A, b_ub=target_no_env, bounds=bounds, method='simplex',
+	#               options={"disp": False, "tol": 1e-11})
+
 	print "{:<35} {:<25}".format("Optimization finished.", dt.now().strftime("%H:%M:%S.%f"))
 
 	if res.success: 
@@ -79,12 +85,19 @@ def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 		for dim_val in d_opt:
 			if dim_val > 0.0001:
 				bulbs_on += 1
-		power = res.fun + bulbs_on * b_pow
+		# power = res.fun + bulbs_on * b_pow
 	else:
+		print "Optimizer couldn't solve optimization problem. Success = {}".format(res.success)
+		print "c {}".format(c)
+		print "A {}".format(A)
+		print "target_no_env {}".format(target_no_env)
+		print "E".format(E)
+
 		d_opt = np.ones((n_bulbs, 1))
 		d_opt = d_opt.tolist()
 		actuators.set_dimming(d_opt, wait_time)
-		power = n_bulbs * (a_pow+b_pow)
+
+		# power = n_bulbs * (a_pow+b_pow)
 # 	print "Optimal power consumption:", "%.3f"%power, "W"
 
 

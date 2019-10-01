@@ -27,7 +27,7 @@ def test_sensing_module_response(office_sensing):
 			print dt.now()
 			print_illuminance(illuminance)
 			print_occupancy(occupancy)
-			time.sleep(1)
+			time.sleep(0.01)
 	except KeyboardInterrupt:
 		print "\nScript Interrupted"
 		office_sensing.stop_sens_modules()

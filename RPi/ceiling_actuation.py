@@ -20,9 +20,9 @@ class CeilingActuation:
 	DIM_LEVEL_FILE_NAME = 'cur_dim_level.txt'
 
 	# Dimming level -> control value conversion constants
-	A_DIM = 1.74069750372e-05
-	M_DIM = 1.97866862723
-	B_DIM = 0.00279331968066
+	A_DIM = 2.6414778091586396e-05
+	M_DIM = 1.89507782939784
+	B_DIM = 0.04746252810564729
 
 	def __init__(self, phue_bridge_ip_address):
 		bridge = Bridge(phue_bridge_ip_address)

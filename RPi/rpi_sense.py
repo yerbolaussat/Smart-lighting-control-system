@@ -50,7 +50,7 @@ def sense_and_optimize(office_sensing):
 					module, calibr_const = portable_sensing_modules.pop()
 					office_sensing.add_portable_module(module, calibr_const)
 				print "[*] New sensing module detected. Starting recalibration."
-				calibrator.calibrate(office_sensing_modules, step=0.1, B=0.65, wait_time=1)
+				calibrator.calibrate(office_sensing_modules, step=0.1, B=0.65, wait_time=0.9)
 
 			# Get sensor readings
 			illuminance, occupancy = office_sensing.get_sensor_readings()
@@ -197,6 +197,7 @@ def listen_for_connection(portable_modules):
 	address = (ip, port)
 	server.bind(address)
 	server.listen(5)
+	print "Listening for connection requests at {}".format(address)
 	while True:
 		client, addr = server.accept()
 		print "\n\n", "*" * 50

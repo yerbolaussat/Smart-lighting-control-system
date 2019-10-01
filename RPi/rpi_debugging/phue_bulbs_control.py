@@ -9,7 +9,7 @@ Script for testing Philips Hue bulbs
 from phue import Bridge
 
 # Constants
-PHUE_IP_ADDRESS = '192.168.0.3'
+PHUE_IP_ADDRESS = '192.168.0.2'
 
 
 # Turn the bulb on, and set brightness to max
@@ -117,7 +117,7 @@ if __name__ == '__main__':
 	# Test bulbs
 	while True:
 		print "Layout of bulbs:\n"
-		print "    {}  {}  {}\n    {}  {}  {}\n    {}  {}  {}".format(0, 4, 1, 7, "x", 6, 2, 6, 3)
+		print "    {}  {}  {}\n    {}  {}  {}\n    {}  {}  {}".format(4, 1, 5, 2, "x", 7, 3, 0, 6)
 		text = raw_input("\n * For binary control of bulbs insert \"binary\"."
 		                 "\n * For adjusting control value insert \"control\"."
 		                 "\n * For adjusting dimming insert \"dimming\".\n")

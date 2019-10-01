@@ -1,3 +1,11 @@
+"""
+File name: tsl2561.py
+Author: Yerbol Aussat
+Python Version: 2.7
+
+This class abstracts away low-level details of interaction with a TSL-2561 light sensor.
+"""
+
 from OmegaExpansion import onionI2C
 import time
 import traceback
@@ -34,9 +42,8 @@ class TSL2561:
 				return ch0 - ch1
 			raise ValueError('Light Type {} is not supported!'.format(light_type))
 		
-		# If error occurred (such as I2C transaction error), return previpus light value
+		# If error occurred (such as I2C transaction error), return previous light value
 		except Exception, e:
 			print "Error Message:\n", str(e)
 			# traceback.print_exc() 
 			return self.previous_value
-			
