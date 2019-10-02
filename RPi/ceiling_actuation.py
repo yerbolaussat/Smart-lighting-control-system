@@ -1,9 +1,9 @@
 """
-File name: office_sensing.py
+File name: ceiling_actuation.py
 Author: Yerbol Aussat
 Python Version: 2.7
 
-CeilingActuatuion class abstacts away actuation of LED bulbs
+CeilingActuatuion class abstacts away actuation of LED bulbs.
 """
 
 import time
@@ -16,10 +16,12 @@ from threading import Lock
 
 class CeilingActuation:
 	# Constants
+	# Bulb's position (x, y) coordinate for each bulb - this is mostly for debugging purposes (printing bulbs'
+	# dimming levels).
 	BULB_DICT = {0: (0, 0), 1: (0, 2), 2: (2, 0), 3: (2, 2), 4: (0, 1), 5: (2, 1), 6: (1, 2), 7: (1, 0)}
 	DIM_LEVEL_FILE_NAME = 'cur_dim_level.txt'
 
-	# Dimming level -> control value conversion constants
+	# [Dimming level -> brightness control value] conversion constants (obtained empirically).
 	A_DIM = 2.6414778091586396e-05
 	M_DIM = 1.89507782939784
 	B_DIM = 0.04746252810564729
@@ -31,7 +33,7 @@ class CeilingActuation:
 		print "[*] Successfully connected to Philips Hue Bridge"
 		self.lock = Lock()
 
-	# Convert dimming level to control value
+	# Convert dimming level to control value.
 	def __dim_to_contr(self, d):
 		if d == -1:
 			return -1
@@ -42,10 +44,13 @@ class CeilingActuation:
 		control_val = ((d-self.B_DIM) / self.A_DIM) ** (1.0 / self.M_DIM)
 		return control_val
 	
-	# Set dimming level dim_val on a bulb i
+	# Set dimming level dim_val on a bulb i.
+	# (Note that when dim_val <= 0.05, we turn off the bulb. The reason is that our bulbs (Philips Hue PAR-38) are
+	# physically unable to achieve dimming levels in the interval (0; 0.5], i.e., the lowest achievable dimming level when
+	# a bulb is on is ~0.05.)
 	def set_bulb(self, i, dim_val, dim_levels):
 		try:
-			if dim_val <= 0.01:
+			if dim_val <= 0.05:
 				with self.lock:
 					dim_levels[i] = 0.0
 				self.lights[i].on = False
@@ -63,7 +68,7 @@ class CeilingActuation:
 			print "\n ERROR: Bulb {}".format(i)
 			print str(e), '\n'
 
-	# Set dimming levels on all bulbs cuncurrently (using multithreading)
+	# Set dimming levels on all bulbs cuncurrently (using multithreading).
 	def set_dimming(self, desired_dimming, wait_time=0.0):
 		if len(desired_dimming) != 8:
 			raise ValueError('Error: Length of dimming vector should be 8!')
@@ -86,7 +91,7 @@ class CeilingActuation:
 			f_dim.write(dim_levels_str)
 		time.sleep(wait_time)
 				
-	# Change dimming on a bulb
+	# Change dimming level on a bulb.
 	# @param bulb_id: id of bulb whose dimming needs to be changed
 	# @param delta_dim: value in [-1.0, 1.0] that corresponds to change in dimming
 	# @param wait_time is the amount of time the system waits for bulbs to be dimmed
@@ -120,7 +125,7 @@ class CeilingActuation:
 		except IOError:
 			print "Dimming levels file is not found"
 
-	# Print dimming level vector
+	# Print dimming level vector.
 	def print_dim_levels(self, name="Bulb dimming level map"):
 		try:
 			with open(self.DIM_LEVEL_FILE_NAME, 'r') as f_dim:
@@ -138,7 +143,7 @@ class CeilingActuation:
 		except IOError:
 			print "Dimming levels file is not found"
 
-	# Get current dimming levels on bulbs	
+	# Get current dimming levels on bulbs.
 	def get_dim_levels(self):
 		try:
 			with open(self.DIM_LEVEL_FILE_NAME, 'r') as f_dim:

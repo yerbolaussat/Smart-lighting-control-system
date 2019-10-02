@@ -26,7 +26,7 @@ MOTION_HISTORY_UPDATE_FREQUENCY = 0.15
 DISCOUNT_FACTOR = 0.995  # discount factor for calculating the occupancy score
 
 
-# Initialize light and PIR sensors
+# Initialize light and PIR sensors.
 def initialize_sensors():
 	tsl = TSL2561()
 	print "[*] Light sensor is initialized"

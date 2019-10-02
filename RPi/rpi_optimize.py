@@ -3,7 +3,13 @@ File name: rpi_optimize.py
 Author: Yerbol Aussat
 Python Version: 2.7
 
-Process that calculates optimal dimming levels of Phue bulbs, given occupancy and lighting values
+This process calculates optimal dimming levels of Philips Hue bulbs (given occupancy and illuminance values), and
+sets them on the bulbs.
+
+TODO:
+- In the current implementation, occupancy vector from "cur_occup.txt" contains occupancy values (0, 1) for "per-desk"
+sensing modules, and target illuminances (lux) for portable sensing modules, which is confusing. This should be fixed
+to make the code more readable.
 """
 
 from datetime import datetime as dt
@@ -21,7 +27,7 @@ from rpi_sense import ILLUMINANCE_FILE_NAME
 print "{:<35} {:<25}".format("Finished importing libraries.", dt.now().strftime("%H:%M:%S.%f"))
 
 # Constants
-# Coefficients of "power vs dimming" best fit line:
+# Coefficients of "power vs dimming" best fit line (obtained empirically for PAR-38 Philips Hue bulbs).
 BEST_FIT_COEF_1 = 11.82
 BEST_FIT_COEF_2 = 1.1814
 
@@ -40,7 +46,7 @@ def get_target_illum():
 
 
 # Set optimal dimming value that satisfies target illuminance.
-# cur_dim_level file gets updated in actuators.set_dimming method.
+# cur_dim_level.txt file gets updated in actuators.set_dimming method.
 def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 	# Take negative of values so we can represent constraints as required by scipy.optimize.linprog
 	if not os.path.isfile('./{}'.format(ILLUM_GAIN_MTX_FILE_NAME)) or \
@@ -57,7 +63,7 @@ def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 	# Power consumed by bulb i: Power_i = a_pow * dim_i + b_pow
 	# Coefficients of variable that is being optimized
 	a_pow = BEST_FIT_COEF_1
-	b_pow = BEST_FIT_COEF_2
+	b_pow = BEST_FIT_COEF_2  # b_pow is not used because the system is linear.
 	n_bulbs = min(8, len(actuators.lights))
 	c = [a_pow] * n_bulbs
 	
@@ -72,6 +78,7 @@ def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 	res = linprog(c, A_ub=A, b_ub=target_no_env, bounds=bounds, method='interior-point',
 	              options={"disp": False})
 
+	# Note: if we use Simplex, tolerance  ("tol") is required.
 	# res = linprog(c, A_ub=A, b_ub=target_no_env, bounds=bounds, method='simplex',
 	#               options={"disp": False, "tol": 1e-11})
 
@@ -98,7 +105,7 @@ def set_optimal_dimming(actuators, target_illum, wait_time=1.0):
 		actuators.set_dimming(d_opt, wait_time)
 
 		# power = n_bulbs * (a_pow+b_pow)
-# 	print "Optimal power consumption:", "%.3f"%power, "W"
+		# print "Optimal power consumption:", "%.3f"%power, "W"
 
 
 # Optimizer thread that sets optimal dimming levels based on current illuminance values.
@@ -139,7 +146,7 @@ if __name__ == '__main__':
 	print "{:<35} {:<25}".format("Main script started.", dt.now().strftime("%H:%M:%S.%f"))
 	ceiling_actuation = CeilingActuation(PHUE_IP_ADDRESS)
 
-	# Initialize Listener, to listen to commands from sensing process
+	# Initialize Listener, to listen to commands from the rpi_sense process.
 	sensing_address = ('localhost', 6000)
 	listener = Listener(sensing_address, authkey='secret password')
 	conn = listener.accept()

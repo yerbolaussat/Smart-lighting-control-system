@@ -3,7 +3,7 @@ File name: office_sensing.py
 Author: Yerbol Aussat
 Python Version: 2.7
 
-OfficeSensing class abstacts away communication with all sensing modules in the smart lighting system.
+OfficeSensing class abstacts away communication with individual sensing modules in the smart lighting system.
 """
 
 from sensing_module import SensingModule
@@ -23,24 +23,24 @@ class OfficeSensing:
 			print "* Initialization error!"
 			self.stop_sens_modules()
 	
-	# Interrupt connection with all sensing modules
+	# Interrupt connection with all sensing modules.
 	def stop_sens_modules(self):
 		print "\nConnection with sensing modules is interrupted"
 		for module in self.sens_modules:
 			module.disconnect()
 
-	# Add sensing module to the system
+	# Add sensing module to the system.
 	def add_portable_module(self, module, calibr_const):
 		self.sens_modules.append(module)
 		self.light_calibration_const.append(calibr_const)
 
-	# Add sensing module to the system
+	# Add sensing module to the system.
 	def detach_portable_module(self, i):
 		self.sens_modules[i].disconnect()
 		del self.sens_modules[i]
 		del self.light_calibration_const[i]
 
-	# Get light and occupancy readings from sensing modules
+	# Get light and occupancy readings from sensing modules.
 	def get_sensor_readings(self):
 		light_readings = []
 		occupancy_readings = []

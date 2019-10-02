@@ -3,8 +3,25 @@ File name: rpi_sense.py
 Author: Yerbol Aussat
 Python Version: 2.7
 
-Monitors changes in occupancy and illuminance in the office, and updates corresponding files every 0.1 seconds.
-Restarts optimization process whenever office occupancy changes.
+This process:
+- Monitors changes in occupancy and illuminance in the office, and updates corresponding files, "cur_illum.txt" and
+ "cur_occup.txt", every ~0.1 seconds.
+- Restarts optimization process whenever office occupancy changes.
+- Listens for incoming connection requests from the portable sensing modules, and triggers their integration into
+the system.
+
+Note:
+- Number "4" is hardcoded in several places (for 4 "per-desk" sensing modules). This should be fixed. Perhaps
+OfficeSensing class should be aware of the number of "per-desk" and portable sensing modules connected to the system.
+- print_illuminance method assumes that the first four sensing modules are "per-desk" and the rest are portable.
+
+TODO:
+- Enable integrating several sensing modules into the system together (current implementation can only integrate
+one sensing module at a time).
+- Similarly, enable disconnecting several sensing modules from the system simultaneously.
+- In the current implementation, occupancy vector from "cur_occup.txt" contains occupancy values (0, 1) for "per-desk"
+sensing modules, and target illuminances (lux) for portable sensing modules, which is confusing. This should be fixed
+to make the code more readable.
 """
 
 import time
@@ -32,9 +49,9 @@ ILLUM_GAIN_MTX_FILE_NAME = 'illum_gain.npy'
 ENV_GAIN_FILE_NAME = 'env_gain.npy'
 
 
-# Get sensor values and trigger optimization process
+# Keep updating sensor values and trigger optimization processes.
 def sense_and_optimize(office_sensing):
-	# Start optimizer process and connect to it
+	# Start optimizer process and connect to it.
 	subprocess.call('python2 rpi_optimize.py &', shell=True)
 	address_optimizer = ('localhost', 6000)
 	conn = Client(address_optimizer, authkey='secret password')
@@ -43,7 +60,8 @@ def sense_and_optimize(office_sensing):
 	t1 = time.time()	
 	try: 
 		while True:
-
+			# If there are any incoming connection requests from new portable sensing modules, pause the optimizer and
+			# integrate these new modules into the system.
 			if len(portable_sensing_modules) > 0:
 				conn.send(PAUSE_OPTIMIZATION_COMMAND)
 				while portable_sensing_modules:
@@ -52,12 +70,12 @@ def sense_and_optimize(office_sensing):
 				print "[*] New sensing module detected. Starting recalibration."
 				calibrator.calibrate(office_sensing_modules, step=0.1, B=0.65, wait_time=0.9)
 
-			# Get sensor readings
+			# Get sensor readings.
 			illuminance, occupancy = office_sensing.get_sensor_readings()
 			cur_illum_str = " ".join([str(illum_val) for illum_val in illuminance])
 			cur_occup_str = " ".join([str(occup_val) for occup_val in occupancy])
 
-			# Print illuminance and occupancy values every 3 seconds
+			# Print illuminance and occupancy values every 3 seconds.
 			t2 = time.time()
 			if t2-t1 > 3:
 				print "\n\n", "*" * 50
@@ -66,13 +84,14 @@ def sense_and_optimize(office_sensing):
 				print_occupancy(occupancy)
 				t1 = t2
 				
-			# Update illuminance file:
+			# Update illuminance file.
 			with open(ILLUMINANCE_FILE_NAME, 'w+') as f_illum:
 				f_illum.write(cur_illum_str)
 
-			# Update occupancy file
+			# Update occupancy file.
 			if os.path.isfile('./{}'.format(OCCUPANCY_FILE_NAME)):
-				# If occupancy file already exists, compare current occupancy with the previous one
+				# If occupancy file already exists, compare current occupancy with the previous one, and if they differ,
+				# restart the optimizer with the new target illuminance values.
 				with open(OCCUPANCY_FILE_NAME, 'r') as f_occup:
 					prev_occup_str = f_occup.read()
 				if prev_occup_str != cur_occup_str:
@@ -82,8 +101,8 @@ def sense_and_optimize(office_sensing):
 					cur_occup = cur_occup_str.split(" ")
 					prev_occup = prev_occup_str.split(" ")
 
-					# Check if a portable module should be disconnected
-					i = 4
+					# Check if a portable module should be disconnected. If yes, disconnect it.
+					i = 4  # NOTE: 4 is hardcoded here.
 					while i < len(cur_occup):
 						if cur_occup[i] == '-1':
 							break
@@ -104,12 +123,14 @@ def sense_and_optimize(office_sensing):
 
 					if len(cur_occup) == len(prev_occup):
 						if cur_occup[:4] == prev_occup[:4]:
+							# If target illuminance on portable sensing modules changed.
 							print "\n", "#" * 50, "\n", "#" * 50
 							print "\nTARGET ILLUMINANCE ON PORTABLE SENSING MODULES CHANGED.\n\n{} ==> {}\n\n" \
 							      "RESTART OPTIMIZER.\n".format(prev_occup[4:], cur_occup[4:])
 							print dt.now().strftime("%H:%M:%S.%f"), "\n"
 							print "#" * 50, "\n", "#" * 50, "\n"
 						else:
+							# If occupancy status of "per-desk" sensing modules changed.
 							print "\n", "#" * 50, "\n", "#" * 50
 							print "\nOCCUPANCY CHANGES: RESTART OPTIMIZER\n"
 							print dt.now().strftime("%H:%M:%S.%f"), "\n"
@@ -119,7 +140,7 @@ def sense_and_optimize(office_sensing):
 				else:
 					time.sleep(0.1)
 			else:
-				# If occupancy file does not exist, create it, and start optimization process
+				# If occupancy file does not exist, create it, and start optimization process.
 				print "CREATE {} file".format(OCCUPANCY_FILE_NAME)
 				with open(OCCUPANCY_FILE_NAME, 'w+') as f_occup:
 					f_occup.write(cur_occup_str)
@@ -128,20 +149,21 @@ def sense_and_optimize(office_sensing):
 	except KeyboardInterrupt:
 		print "\nScript Interrupted"
 		office_sensing.stop_sens_modules()
-		conn.send(CLOSE_CONNECTION_COMMAND)  # Close connection with optimizer
+		conn.send(CLOSE_CONNECTION_COMMAND)  # Close connection with optimizer.
 		conn.close()
 		subprocess.call('rm {}'.format(OCCUPANCY_FILE_NAME), shell=True)
 
-	except Exception, e:  # Stop sensing modules if there is an exception
+	except Exception, e:  # Stop sensing modules if there is an exception.
 		office_sensing.stop_sens_modules()
 		print "Exception:\n", str(e)
 		traceback.print_exc()
-		conn.send(CLOSE_CONNECTION_COMMAND)  # Close connection with optimizer
+		conn.send(CLOSE_CONNECTION_COMMAND)  # Close connection with optimizer.
 		conn.close()
 		subprocess.call('rm {}'.format(OCCUPANCY_FILE_NAME), shell=True)
 
 
-# Print illuminance values on each sensor
+# Print illuminance values on each sensor. Note: this method assumes an arrangement of "per-desk" sensing
+# modules as in the experimental testbed in ISS4E lab.
 def print_illuminance(illuminance, occupancy):
 	print "\nIlluminance readings from light sensors:"
 	print " ", "-"*13
@@ -160,7 +182,7 @@ def print_illuminance(illuminance, occupancy):
 			print "     -------"
 
 
-# Print occupancy values on each sensor
+# Print occupancy values on each sensor.
 def print_occupancy(occupancy):
 	print "\nOccupancy matrix:"
 	print "  ", "_"*11
@@ -171,7 +193,7 @@ def print_occupancy(occupancy):
 	print "\n"
 
 
-# Get configs for sensing modules
+# Get configs for sensing modules.
 def get_sens_module_config():
 	address_list = []
 	light_calibration = []
@@ -185,6 +207,7 @@ def get_sens_module_config():
 	return address_list, light_calibration
 
 
+# Listen for incoming connection requests from portable sensing modules.
 def listen_for_connection(portable_modules):
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
