@@ -4,7 +4,7 @@ Author: Yerbol Aussat
 Python Version: 2.7
 
 This process calculates optimal dimming levels of Philips Hue bulbs (given occupancy and illuminance values), and
-sets them on the bulbs.
+sets them on the bulbs. It also listens for commands from rpi_sense process.
 
 TODO:
 - In the current implementation, occupancy vector from "cur_occup.txt" contains occupancy values (0, 1) for "per-desk"

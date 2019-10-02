@@ -2,17 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="26ac6fe0-5645-4fbc-8ef3-217ec697e742" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/RPi/rpi_start.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/RPi/sensing_module_list_2.txt" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Omega/omega_module.py" afterPath="$PROJECT_DIR$/Omega/omega_module.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RPi/ceiling_actuation.py" afterPath="$PROJECT_DIR$/RPi/ceiling_actuation.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RPi/office_sensing.py" afterPath="$PROJECT_DIR$/RPi/office_sensing.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RPi/portable_sensing_module.py" afterPath="$PROJECT_DIR$/RPi/portable_sensing_module.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RPi/rpi_calibrate.py" afterPath="$PROJECT_DIR$/RPi/rpi_calibrate.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RPi/rpi_optimize.py" afterPath="$PROJECT_DIR$/RPi/rpi_optimize.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RPi/rpi_sense.py" afterPath="$PROJECT_DIR$/RPi/rpi_sense.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/RPi/sensing_module.py" afterPath="$PROJECT_DIR$/RPi/sensing_module.py" />
     </list>
     <ignored path="smart_lighting_code.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -56,11 +47,33 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="rpi_optimize.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="rpi_optimize.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/RPi/rpi_optimize.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="240">
-              <caret line="16" column="18" selection-start-line="16" selection-start-column="18" selection-end-line="16" selection-end-column="18" />
+            <state relative-caret-position="195">
+              <caret line="13" column="0" selection-start-line="13" selection-start-column="0" selection-end-line="13" selection-end-column="0" />
+              <folding>
+                <element signature="e#546#581#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="bulb_transient_state_analysis.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/RPi/rpi_debugging/bulb_transient_state_analysis.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="0">
+              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="automate_illum_vs_control_value_calibration.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/RPi/rpi_debugging/automate_illum_vs_control_value_calibration.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="45">
+              <caret line="3" column="19" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -153,6 +166,24 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="RPi" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="smart_lighting_control_system" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="smart_lighting_control_system" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="RPi" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="rpi_debugging" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -346,7 +377,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-348" y="-1080" width="1920" height="1080" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22696155" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3298647" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -355,7 +386,7 @@
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4474432" sideWeight="0.8824464" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32670453" sideWeight="0.48768863" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20121951" sideWeight="0.6629805" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20121951" sideWeight="0.6629805" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -433,13 +464,6 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/RPi/rpi_sense.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/RPi/rpi_sense.py">
-      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1845">
           <caret line="123" column="56" selection-start-line="123" selection-start-column="52" selection-end-line="123" selection-end-column="56" />
         </state>
@@ -502,7 +526,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#493#528#0" expanded="true" />
+            <element signature="e#546#581#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -526,7 +550,7 @@
         <state relative-caret-position="60">
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
           <folding>
-            <element signature="e#493#528#0" expanded="true" />
+            <element signature="e#546#581#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -606,14 +630,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="304">
           <caret line="53" column="41" selection-start-line="53" selection-start-column="41" selection-end-line="53" selection-end-column="41" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/RPi/rpi_debugging/automate_illum_vs_control_value_calibration.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="23" column="44" selection-start-line="23" selection-start-column="44" selection-end-line="23" selection-end-column="44" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -785,8 +801,26 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/RPi/rpi_optimize.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="240">
-          <caret line="16" column="18" selection-start-line="16" selection-start-column="18" selection-end-line="16" selection-end-column="18" />
+        <state relative-caret-position="195">
+          <caret line="13" column="0" selection-start-line="13" selection-start-column="0" selection-end-line="13" selection-end-column="0" />
+          <folding>
+            <element signature="e#546#581#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/RPi/rpi_debugging/bulb_transient_state_analysis.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/RPi/rpi_debugging/automate_illum_vs_control_value_calibration.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="3" column="19" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
           <folding />
         </state>
       </provider>
