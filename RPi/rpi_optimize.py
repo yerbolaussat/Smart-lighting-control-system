@@ -23,6 +23,7 @@ from multiprocessing import Process
 from multiprocessing import Lock
 from rpi_sense import OCCUPANCY_FILE_NAME
 from rpi_sense import ILLUMINANCE_FILE_NAME
+from rpi_calibrate import PHUE_IP_ADDRESS
 
 print "{:<35} {:<25}".format("Finished importing libraries.", dt.now().strftime("%H:%M:%S.%f"))
 
@@ -33,7 +34,6 @@ BEST_FIT_COEF_2 = 1.1814
 
 ILLUM_GAIN_MTX_FILE_NAME = 'illum_gain.npy'
 ENV_GAIN_FILE_NAME = 'env_gain.npy'
-PHUE_IP_ADDRESS = '192.168.0.2'
 lock = Lock()
 
 
